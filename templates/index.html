@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>病症诊断和可解释性研究</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+  <script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
+  <style>
+    .img-preview {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .img-preview img {
+      width: 100px;
+      height: 100px;
+      margin: 5px;
+    }
+
+    #upload-btn {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #4CAF50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .image-wrapper {
+        margin: 10px;
+        padding: 10px;
+        border: 1px solid gray;
+    }
+
+    .result-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .result-wrapper img {
+        margin: 5px;
+        /* width: 200px;
+        height: 200px; */
+        object-fit: contain;
+        border: 5px solid rgb(11, 211, 78);
+    }
+
+  </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-xl navbar-light" style="background-color: #21ea3f;">
+        <div class="container">
+            <a class="navbar-brand"><h1 class="display-5">基于舌象和目象的病症诊断和可解释性研究</h1></a>
+        </div>
+    </nav>
+      
+    <div class="container my-5">
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label for="sx">上传一张舌象图片</label>
+              <div class="custom-file">
+                <input type="file" class="custom-file-input" id="sx" name="sx" multiple>
+                <label class="custom-file-label" for="sx">选择文件</label>
+              </div>
+            </div>
+            <div class="img-preview" id="sx-preview"></div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label for="mx">上传十张目象图片</label>
+              <div class="custom-file">
+                <input type="file" class="custom-file-input" id="mx" name="mx" multiple>
+                <label class="custom-file-label" for="mx">选择文件</label>
+              </div>
+            </div>
+            <div class="img-preview" id="mx-preview"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <button type="button" class="btn btn-primary" id="upload-btn">上传图片</button>
+        </div>
+        <div class="results" id="results"></div>
+      </div>
+  <script>
+    var sx_list = []
+    var mx_list = []
+    $("#sx").change(function () {
+      for (var i = 0; i < this.files.length; i++){
+        sx_list.push(this.files[i])
+      }
+      previewImages(this, "#sx-preview");
+    });
+    $("#mx").change(function () {
+      for (var i = 0; i < this.files.length; i++){
+        mx_list.push(this.files[i])
+      }
+      previewImages(this, "#mx-preview");
+    });
+
+
+    function previewImages(input, pos) {
+      var preview = $(pos);
+      if (input.files) {
+        preview.empty();
+      
+        for (var i = 0; i < input.files.length; i++) {
+            var file = input.files[i];
+            if (/^image\/\w+$/.test(file.type)) {
+                var reader = new FileReader();
+                reader.onload = function (event) {
+                var img = new Image();
+                img.src = event.target.result;
+                preview.append(img);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+      }
+    }
+
+    $("#upload-btn").click(function () {
+      var form_data = new FormData();
+      var ins = sx_list.length;
+      for (var x = 0; x < ins; x++) {
+        form_data.append("sx[]", sx_list[x]);
+      }
+      var ins = mx_list.length;
+      for (var x = 0; x < ins; x++) {
+        form_data.append("mx[]", mx_list[x]);
+      }
+      
+      $.ajax({
+        url: "/upload",
+        type: "POST",
+        data: form_data,
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: function (data) {
+          var d=$('#results');
+          d.children().remove();
+          // d.append(document.createElement("div").contains = data.label);
+          for(var i = 0; i < data.results.length; i++) {
+              var wrapper = document.createElement("div");
+              wrapper.classList.add("image-wrapper");
+              var img = document.createElement("img");
+              img.src = "data:image/png;base64," + data.images[i];
+              wrapper.appendChild(img);
+              var resultWrapper = document.createElement("div");
+              resultWrapper.classList.add("result-wrapper");
+              for(var j = 0; j < data.results[i].length; j++) {
+              var resultImg = document.createElement("img");
+              resultImg.src = "data:image/png;base64," + data.results[i][j];
+              resultWrapper.appendChild(resultImg);
+              }
+              wrapper.appendChild(resultWrapper);
+              d.append(wrapper);
+          }
+          alert("success :" + data.label);
+          sx_list = []
+          mx_list = []
+        },
+        error: function () {
+          alert("上传失败！");
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

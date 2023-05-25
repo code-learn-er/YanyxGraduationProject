@@ -1,0 +1,7 @@
+data/*
+logs/*
+weight/*
+results/*
+!results/*/*bs12*
+__pycache__/*
+.vscode/*
