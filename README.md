@@ -1,2 +1,5 @@
 # YanyxGraduationProject
 基于医学舌象和目象的病证诊断和可解释性研究
+多通道卷积神经网络分类、VGGNet、ResNet
+GradCAM特征图可视化
+flask框架搭建webui
